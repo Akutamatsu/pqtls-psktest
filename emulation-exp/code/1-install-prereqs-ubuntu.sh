@@ -21,7 +21,8 @@ cd tmp
 ROOT=$(pwd)
 
 # Fetch all the files we need
-wget https://cmake.org/files/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.${CMAKE_BUILD}-Linux-x86_64.sh
+#wget https://cmake.org/files/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.${CMAKE_BUILD}-Linux-x86_64.sh
+cp /home/zzd/cmake-${CMAKE_VERSION}.${CMAKE_BUILD}-Linux-x86_64.sh .
 git clone --single-branch --branch pq-tls-experiment https://github.com/Akutamatsu/liboqs.git
 git clone --single-branch --branch pq-tls-experiment https://github.com/Akutamatsu/openssl.git
 wget nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && tar -zxvf nginx-${NGINX_VERSION}.tar.gz
@@ -36,15 +37,3 @@ mkdir build && cd build
 ${ROOT}/cmake/bin/cmake -GNinja -DCMAKE_INSTALL_PREFIX=${ROOT}/openssl/oqs ..
 ninja && ninja install
 
-# build nginx (which builds OQS-OpenSSL)
-cd ${ROOT}
-cd nginx-${NGINX_VERSION}
-./configure --prefix=${ROOT}/nginx \
-                --with-debug \
-                --with-http_ssl_module --with-openssl=${ROOT}/openssl \
-                --without-http_gzip_module \
-                --with-cc-opt="-I ${ROOT}/openssl/oqs/include" \
-                --with-ld-opt="-L ${ROOT}/openssl/oqs/lib";
-sed -i 's/libcrypto.a/libcrypto.a -loqs/g' objs/Makefile;
-sed -i 's/EVP_MD_CTX_create/EVP_MD_CTX_new/g; s/EVP_MD_CTX_destroy/EVP_MD_CTX_free/g' src/event/ngx_event_openssl.c;
-make && make install;
