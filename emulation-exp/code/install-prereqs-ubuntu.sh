@@ -22,8 +22,8 @@ ROOT=$(pwd)
 
 # Fetch all the files we need
 wget https://cmake.org/files/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.${CMAKE_BUILD}-Linux-x86_64.sh
-git clone --single-branch --branch pq-tls-experiment https://github.com/xvzcf/liboqs
-git clone --single-branch --branch pq-tls-experiment https://github.com/xvzcf/openssl
+git clone --single-branch --branch pq-tls-experiment https://github.com/Akutamatsu/liboqs.git
+git clone --single-branch --branch pq-tls-experiment https://github.com/Akutamatsu/openssl.git
 wget nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && tar -zxvf nginx-${NGINX_VERSION}.tar.gz
 
 # Install the latest CMake
