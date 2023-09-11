@@ -26,6 +26,70 @@
 #define MS_IN_S 1000
 
 const char* host = "192.168.1.128:4433";
+static int c_debug = 1;
+static BIO *bio_c_out = NULL;
+static BIO *bio_err = NULL;
+
+const char *psk_key = "8e8fb9cf7fab49b9fb2ba92ca4b9e217196d9a37917ca7a786347ee19a1efc70";
+const char *psk_identity = "zzdtest";
+
+static unsigned int psk_client_cb(SSL *ssl, const char *hint, char *identity,
+                                  unsigned int max_identity_len,
+                                  unsigned char *psk,
+                                  unsigned int max_psk_len)
+{
+    int ret;
+    long key_len;
+    unsigned char *key;
+
+    if (c_debug)
+        BIO_printf(bio_c_out, "psk_client_cb\n");
+    if (!hint) {
+        /* no ServerKeyExchange message */
+        if (c_debug)
+            BIO_printf(bio_c_out,
+                       "NULL received PSK identity hint, continuing anyway\n");
+    } else if (c_debug) {
+        BIO_printf(bio_c_out, "Received PSK identity hint '%s'\n", hint);
+    }
+
+    /*
+     * lookup PSK identity and PSK key based on the given identity hint here
+     */
+    ret = BIO_snprintf(identity, max_identity_len, "%s", psk_identity);
+    if (ret < 0 || (unsigned int)ret > max_identity_len)
+        goto out_err;
+    if (c_debug)
+        BIO_printf(bio_c_out, "created identity '%s' len=%d\n", identity,
+                   ret);
+
+    /* convert the PSK key to binary */
+    key = OPENSSL_hexstr2buf(psk_key, &key_len);
+    if (key == NULL) {
+        BIO_printf(bio_err, "Could not convert PSK key '%s' to buffer\n",
+                   psk_key);
+        return 0;
+    }
+    if (max_psk_len > INT_MAX || key_len > (long)max_psk_len) {
+        BIO_printf(bio_err,
+                   "psk buffer of callback is too small (%d) for key (%ld)\n",
+                   max_psk_len, key_len);
+        OPENSSL_free(key);
+        return 0;
+    }
+
+    memcpy(psk, key, key_len);
+    OPENSSL_free(key);
+
+    if (c_debug)
+        BIO_printf(bio_c_out, "created PSK len=%ld\n", key_len);
+
+    return key_len;
+ out_err:
+    if (c_debug)
+        BIO_printf(bio_err, "Error in PSK client callback\n");
+    return 0;
+}
 
 SSL* do_tls_handshake(SSL_CTX* ssl_ctx)
 {
@@ -85,6 +149,10 @@ int main(int argc, char* argv[])
 {
     int ret = -1;
     SSL_CTX* ssl_ctx = 0;
+    
+    bio_c_out = BIO_new_fp(stdout, BIO_NOCLOSE);
+    bio_err = BIO_new_fp(stdout, BIO_NOCLOSE);
+    
     if(argc != 3)
     {
         fprintf(stderr, "Wrong number of arguments.\n");
@@ -138,6 +206,14 @@ int main(int argc, char* argv[])
         goto ossl_error;
     }
     SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, NULL);
+
+#ifndef OPENSSL_NO_PSK
+    if (psk_key != NULL) {
+        if (c_debug)
+            BIO_printf(bio_c_out, "PSK key given, setting client callback\n");
+        SSL_CTX_set_psk_client_callback(ssl_ctx, psk_client_cb);
+    }
+#endif
 
         ssl = do_tls_handshake(ssl_ctx);
         if (!ssl)
