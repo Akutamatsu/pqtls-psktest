@@ -25,6 +25,7 @@
 #define NS_IN_MS 1000000.0
 #define MS_IN_S 1000
 
+#define TEST_PSK
 const char* host = "192.168.1.128:4433";
 static int c_debug = 1;
 static BIO *bio_c_out = NULL;
@@ -161,7 +162,8 @@ int main(int argc, char* argv[])
     const char* kex_alg = argv[1];
     strcpy(g_NAME_LOGFILE, argv[2]);
 
-    const char* ciphersuites = "TLS_AES_256_GCM_SHA384";
+    //const char* ciphersuites = "TLS_AES_256_GCM_SHA384";
+    const char* ciphersuites = "TLS_AES_128_GCM_SHA256";
     const SSL_METHOD* ssl_meth = TLS_client_method();
     SSL* ssl = NULL;
 
@@ -199,7 +201,7 @@ int main(int argc, char* argv[])
     {
         goto ossl_error;
     }
-
+#ifndef TEST_PSK
     ret = SSL_CTX_load_verify_locations(ssl_ctx, "../tmp/nginx/conf/CA.crt", 0);
     if(ret != 1)
     {
@@ -207,7 +209,7 @@ int main(int argc, char* argv[])
     }
     SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, NULL);
 
-#ifndef OPENSSL_NO_PSK
+#else
     if (psk_key != NULL) {
         if (c_debug)
             BIO_printf(bio_c_out, "PSK key given, setting client callback\n");
