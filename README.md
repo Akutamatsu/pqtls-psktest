@@ -1,4 +1,4 @@
-This repository is a companion to the following paper:
+This repository is modified from the following paper:
 
 - Christian Paquin, Douglas Stebila, and Goutam Tamvada. **Benchmarking post-quantum cryptography in TLS**. *IACR Cryptology ePrint Archive*, Report 2019/1447. [https://eprint.iacr.org/2019/1447](https://eprint.iacr.org/2019/1447).
 
