@@ -7,5 +7,5 @@ OPENSSL=$(OPENSSL_DIR)/apps/openssl
 OQS_INCLUDE=$(OPENSSL_DIR)/oqs/include
 OQS_LIB=$(OPENSSL_DIR)/oqs/lib
 
-clt_conn.o: test_conn.c
+test_conn.o: test_conn.c
 	$(CC) -g -Wall -Wextra -Wno-error -Wpedantic -I$(OPENSSL_INCLUDE) -I$(OQS_INCLUDE) $< -L$(OPENSSL_DIR) -L$(OQS_LIB) -lssl -lcrypto -ldl -lpthread -loqs -o $@
